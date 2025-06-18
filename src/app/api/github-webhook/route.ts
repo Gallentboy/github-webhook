@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import {NextRequest, NextResponse} from "next/server";
+import {log} from "node:util";
 
 const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET as string; // 你Webhook填写的Secret
 const GH_PAT = process.env.GH_PAT as string; // GitHub Personal Access Token
@@ -26,8 +27,6 @@ const fireSyncUpstream = async () => {
             ref: 'main'
         })
     });
-    console.log("[GH_PAT]: ", GH_PAT)
-    console.log("[URL]: ", workflow_url)
     const resp = await github_resp.text();
     if (github_resp.status === 204) {
         return new NextResponse(null, {status: 204})
@@ -39,6 +38,7 @@ const fireSyncUpstream = async () => {
 };
 
 export const POST = async (request: NextRequest) => {
+    request.headers.forEach((v, k) => console.log("==> {}: {}", k, v));
     console.log("webhook request:", await request.json());
     return await fireSyncUpstream();
 }
