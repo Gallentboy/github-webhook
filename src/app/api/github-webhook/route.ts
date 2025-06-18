@@ -8,10 +8,11 @@ const GITHUB_OWNER = process.env.GITHUB_OWNER as string;                // 自�
 const GITHUB_REPO = process.env.GITHUB_REPO as string;                      // 自己fork库名
 const GITHUB_WORKFLOW_ID = process.env.GITHUB_WORKFLOW_ID as string;              // 你的workflow文件名(.github/workflows/下)
 
-function verifySignature(payload: Buffer, signature: string) {
+const verifySignature = (payload: string, signature: string) => {
     const hmac = crypto.createHmac('sha256', GITHUB_WEBHOOK_SECRET);
     hmac.update(payload);
     const expected = 'sha256=' + hmac.digest('hex');
+    console.log("origin: ", signature, ", expected: ",expected);
     return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
 }
 
@@ -39,7 +40,19 @@ const fireSyncUpstream = async () => {
 
 export const POST = async (request: NextRequest) => {
     request.headers.forEach((v, k) => console.log("==> {}: {}", k, v));
-    console.log("webhook request:", await request.json());
+    const sig = request.headers.get("x-hub-signature-256");
+    if (sig == null || request.body == null) {
+        return NextResponse.json({msg: "invalid request"}, {status: 401});
+    }
+    if (!verifySignature(await request.text(), sig)) {
+        return NextResponse.json({msg: "sign failed"}, {status: 401});
+    }
     // return await fireSyncUpstream();
     return NextResponse.json({});
-}
+};
+
+export const config = {
+    api: {
+        bodyParser: false, // 为了能校验signature，需用raw body
+    }
+};
