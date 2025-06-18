@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import {NextRequest, NextResponse} from "next/server";
-import {log} from "node:util";
 
 const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET as string; // 你Webhook填写的Secret
 const GH_PAT = process.env.GH_PAT as string; // GitHub Personal Access Token
@@ -12,7 +11,6 @@ const verifySignature = (payload: string, signature: string) => {
     const hmac = crypto.createHmac('sha256', GITHUB_WEBHOOK_SECRET);
     hmac.update(payload);
     const expected = 'sha256=' + hmac.digest('hex');
-    console.log("origin: ", signature, ", expected: ",expected);
     return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
 }
 
@@ -39,7 +37,6 @@ const fireSyncUpstream = async () => {
 };
 
 export const POST = async (request: NextRequest) => {
-    request.headers.forEach((v, k) => console.log("==> {}: {}", k, v));
     const sig = request.headers.get("x-hub-signature-256");
     if (sig == null || request.body == null) {
         return NextResponse.json({msg: "invalid request"}, {status: 401});
@@ -47,8 +44,7 @@ export const POST = async (request: NextRequest) => {
     if (!verifySignature(await request.text(), sig)) {
         return NextResponse.json({msg: "sign failed"}, {status: 401});
     }
-    // return await fireSyncUpstream();
-    return NextResponse.json({});
+    return await fireSyncUpstream();
 };
 
 export const config = {
