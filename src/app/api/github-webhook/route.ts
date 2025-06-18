@@ -27,6 +27,8 @@ const fireSyncUpstream = async () => {
             ref: 'main'
         })
     });
+    console.log("[GH_PAT]: ", GH_PAT)
+    console.log("[URL]: ", workflow_url)
     const resp = await github_resp.text();
     if (github_resp.status === 204) {
         return new NextResponse(null, {status: 204})
