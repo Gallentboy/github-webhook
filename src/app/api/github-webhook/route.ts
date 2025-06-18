@@ -40,5 +40,6 @@ const fireSyncUpstream = async () => {
 export const POST = async (request: NextRequest) => {
     request.headers.forEach((v, k) => console.log("==> {}: {}", k, v));
     console.log("webhook request:", await request.json());
-    return await fireSyncUpstream();
+    // return await fireSyncUpstream();
+    return NextResponse.json({});
 }
